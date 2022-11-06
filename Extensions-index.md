@@ -3,7 +3,7 @@
 	"extensions": [
 		{
 			"name": "Latent Mirroring",
-			"url": "[https://github.com/AUTOMATIC1111/stable-diffusion-webui-aesthetic-gradients](https://github.com/dfaker/SD-latent-mirroring)",
+			"url": "https://github.com/dfaker/SD-latent-mirroring",
 			"description": "Applies mirroring and flips to the latent images to produce anything from subtle balanced compositions to perfect reflections"
 		}
 	]
