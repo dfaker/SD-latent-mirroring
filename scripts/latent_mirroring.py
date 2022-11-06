@@ -51,6 +51,8 @@ class Script(scripts.Script):
         if not hasattr(self, 'callbacks_added'):
             on_cfg_denoiser(self.denoise_callback)
             self.callbacks_added = True
+        self.run_callback = True
 
     def postprocess(self, *args):
+        self.run_callback = False
         return
