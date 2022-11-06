@@ -1,4 +1,3 @@
-
 import torch
 import modules.scripts as scripts
 import gradio as gr
@@ -16,7 +15,7 @@ class Script(scripts.Script):
 
     def ui(self, is_img2img):
         mirror_mode = gr.Radio(label='Latent Mirror mode', choices=['None', 'Alternate Steps', 'Blend Average'], value='None', type="index")
-        mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', '90 Degree Rotation', '180 Degree Rotation'], value='Vertical Mirroring', type="index")
+        mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels'], value='Vertical Mirroring', type="index")
         mirroring_max_step_fraction = gr.Slider(minimum=0.0, maximum=1.0, step=0.01, label='Maximum steps fraction to mirror at', value=0.25)
         self.run_callback = False
         return [mirror_mode, mirror_style, mirroring_max_step_fraction]
@@ -30,18 +29,27 @@ class Script(scripts.Script):
                 elif self.mirror_style == 1:
                     params.x[:, :, :, :] = torch.flip(params.x, [2])
                 elif self.mirror_style == 2:
-                    params.x[:, :, :, :] = torch.rot90(params.x, dims=[2, 3])
+                    params.x[:, :, :, :] = torch.flip(params.x, [3, 2])
                 elif self.mirror_style == 3:
+                    params.x[:, :, :, :] = torch.rot90(params.x, dims=[2, 3])
+                elif self.mirror_style == 4:
                     params.x[:, :, :, :] = torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3])
+                elif self.mirror_style == 5:
+                    params.x[:, :, :, :] = torch.roll(params.x, shifts=1, dims=[1])
+
             elif self.mirror_mode == 2:
                 if self.mirror_style == 0:
                     params.x[:, :, :, :] = (torch.flip(params.x, [3]) + params.x)/2
                 elif self.mirror_style == 1:
                     params.x[:, :, :, :] = (torch.flip(params.x, [2]) + params.x)/2
                 elif self.mirror_style == 2:
-                    params.x[:, :, :, :] = (torch.rot90(params.x, dims=[2, 3]) + params.x)/2
+                    params.x[:, :, :, :] = (torch.flip(params.x, [2, 3]) + params.x)/2
                 elif self.mirror_style == 3:
-                    params.x[:, :, :, :] = (torch.rot90(torch.rot90(params.x_in, dims=[2, 3]), dims=[2, 3]) + params.x_in)/2
+                    params.x[:, :, :, :] = (torch.rot90(params.x, dims=[2, 3]) + params.x)/2
+                elif self.mirror_style == 4:
+                    params.x[:, :, :, :] = (torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3]) + params.x)/2
+                elif self.mirror_style == 5:
+                    params.x[:, :, :, :] = (torch.roll(params.x, shifts=1, dims=[1]) + params.x)/2
 
     def process(self, p, mirror_mode, mirror_style, mirroring_max_step_fraction):
         self.mirror_mode = mirror_mode
