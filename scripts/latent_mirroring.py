@@ -9,7 +9,7 @@ from modules import processing
 class Script(scripts.Script):
 
     def title(self):
-        return "Latent Mirroring - Always On"
+        return "Latent Mirroring"
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
