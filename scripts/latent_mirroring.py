@@ -23,34 +23,41 @@ class Script(scripts.Script):
     def denoise_callback(self, params):
 
         if self.run_callback and params.sampling_step < params.total_sampling_steps*self.mirroring_max_step_fraction:
-            if self.mirror_mode == 1:
-                if self.mirror_style == 0:
-                    params.x[:, :, :, :] = torch.flip(params.x, [3])
-                elif self.mirror_style == 1:
-                    params.x[:, :, :, :] = torch.flip(params.x, [2])
-                elif self.mirror_style == 2:
-                    params.x[:, :, :, :] = torch.flip(params.x, [3, 2])
-                elif self.mirror_style == 3:
-                    params.x[:, :, :, :] = torch.rot90(params.x, dims=[2, 3])
-                elif self.mirror_style == 4:
-                    params.x[:, :, :, :] = torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3])
-                elif self.mirror_style == 5:
-                    params.x[:, :, :, :] = torch.roll(params.x, shifts=1, dims=[1])
+            try:
+                if self.mirror_mode == 1:
+                    if self.mirror_style == 0:
+                        params.x[:, :, :, :] = torch.flip(params.x, [3])
+                    elif self.mirror_style == 1:
+                        params.x[:, :, :, :] = torch.flip(params.x, [2])
+                    elif self.mirror_style == 2:
+                        params.x[:, :, :, :] = torch.flip(params.x, [3, 2])
+                    elif self.mirror_style == 3:
+                        params.x[:, :, :, :] = torch.rot90(params.x, dims=[2, 3])
+                    elif self.mirror_style == 4:
+                        params.x[:, :, :, :] = torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3])
+                    elif self.mirror_style == 5:
+                        params.x[:, :, :, :] = torch.roll(params.x, shifts=1, dims=[1])
 
-            elif self.mirror_mode == 2:
-                if self.mirror_style == 0:
-                    params.x[:, :, :, :] = (torch.flip(params.x, [3]) + params.x)/2
-                elif self.mirror_style == 1:
-                    params.x[:, :, :, :] = (torch.flip(params.x, [2]) + params.x)/2
-                elif self.mirror_style == 2:
-                    params.x[:, :, :, :] = (torch.flip(params.x, [2, 3]) + params.x)/2
-                elif self.mirror_style == 3:
-                    params.x[:, :, :, :] = (torch.rot90(params.x, dims=[2, 3]) + params.x)/2
-                elif self.mirror_style == 4:
-                    params.x[:, :, :, :] = (torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3]) + params.x)/2
-                elif self.mirror_style == 5:
-                    params.x[:, :, :, :] = (torch.roll(params.x, shifts=1, dims=[1]) + params.x)/2
-
+                elif self.mirror_mode == 2:
+                    if self.mirror_style == 0:
+                        params.x[:, :, :, :] = (torch.flip(params.x, [3]) + params.x)/2
+                    elif self.mirror_style == 1:
+                        params.x[:, :, :, :] = (torch.flip(params.x, [2]) + params.x)/2
+                    elif self.mirror_style == 2:
+                        params.x[:, :, :, :] = (torch.flip(params.x, [2, 3]) + params.x)/2
+                    elif self.mirror_style == 3:
+                        params.x[:, :, :, :] = (torch.rot90(params.x, dims=[2, 3]) + params.x)/2
+                    elif self.mirror_style == 4:
+                        params.x[:, :, :, :] = (torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3]) + params.x)/2
+                    elif self.mirror_style == 5:
+                        params.x[:, :, :, :] = (torch.roll(params.x, shifts=1, dims=[1]) + params.x)/2
+            except RuntimeError as e:
+                if self.mirror_style in (3, 4):
+                    raise RuntimeError('90 Degree Rotation requires a square image.') from e
+                else:
+                    raise RuntimeError('Error transforming image for latent mirroring.') from e
+                        
+                        
     def process(self, p, mirror_mode, mirror_style, mirroring_max_step_fraction):
         self.mirror_mode = mirror_mode
         self.mirror_style = mirror_style
