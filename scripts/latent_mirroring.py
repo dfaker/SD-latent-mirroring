@@ -3,7 +3,7 @@ import modules.scripts as scripts
 import gradio as gr
 from modules.script_callbacks import on_cfg_denoiser
 from modules import processing
-
+from torchvision import transforms
 
 class Script(scripts.Script):
 
@@ -15,10 +15,16 @@ class Script(scripts.Script):
 
     def ui(self, is_img2img):
         mirror_mode = gr.Radio(label='Latent Mirror mode', choices=['None', 'Alternate Steps', 'Blend Average'], value='None', type="index")
-        mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels'], value='Vertical Mirroring', type="index")
+        mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels', 'None'], value='Vertical Mirroring', type="index")
+
+        with gr.Row():
+            x_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='X panning', value=0.0)
+            y_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='Y panning', value=0.0)
+
         mirroring_max_step_fraction = gr.Slider(minimum=0.0, maximum=1.0, step=0.01, label='Maximum steps fraction to mirror at', value=0.25)
+
         self.run_callback = False
-        return [mirror_mode, mirror_style, mirroring_max_step_fraction]
+        return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction]
 
     def denoise_callback(self, params):
 
@@ -55,13 +61,23 @@ class Script(scripts.Script):
                 if self.mirror_style in (3, 4):
                     raise RuntimeError('90 Degree Rotation requires a square image.') from e
                 else:
-                    raise RuntimeError('Error transforming image for latent mirroring.') from e
-                        
-                        
-    def process(self, p, mirror_mode, mirror_style, mirroring_max_step_fraction):
+                    raise RuntimeError('Error transforming image for latent mirroring.') from e     
+
+            if self.x_pan != 0:
+                params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[3]*self.x_pan), dims=[3])
+            if self.y_pan != 0:
+                 params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[2]*self.y_pan), dims=[2])
+
+            w, h = params.x.size()[2], params.x.size()[3]
+            tw, th = int(w*self.zoom_factor), int(h*self.zoom_factor)
+
+
+    def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction):
         self.mirror_mode = mirror_mode
         self.mirror_style = mirror_style
         self.mirroring_max_step_fraction = mirroring_max_step_fraction
+        self.x_pan = x_pan
+        self.y_pan = y_pan
 
         if not hasattr(self, 'callbacks_added'):
             on_cfg_denoiser(self.denoise_callback)
