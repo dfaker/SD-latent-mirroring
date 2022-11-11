@@ -3,7 +3,7 @@ Applies mirroring and flips to the latent images mid-generation to produce anyth
 
 ## UI
 
-![image](https://user-images.githubusercontent.com/35278260/201224546-0349c073-10d6-47ac-9c94-80314540c398.png)
+![image](https://user-images.githubusercontent.com/35278260/201234705-1e8f6b36-29b0-4c5c-8773-4ee6734c1748.png)
 - Mirror Application Mode
   - **None** - Do not mirror
   - **Alternate Steps** - flip or rotate the latents on each step
@@ -15,6 +15,8 @@ Applies mirroring and flips to the latent images mid-generation to produce anyth
   - **90 Degree Rotation** - Rotate 90 degrees clockwise.
   - **180 Degree Rotation** - Rotate 180 degrees
   - **Roll Channels** - Sequentially switch the 'channels' of the latent image for colour variations.
+  - **None** - No mirroring.
+- **X/Y Panning** - shift the latents in the specfied direction by this percentage of the total size every step.
 - **Maximum steps fraction to mirror at** - a decimal percentage representing the maximum step to apply the mirroring on, 0.5 = 50%, stopping at the 10th step out of 20 when 20 steps are used.
 
 ## Outputs
