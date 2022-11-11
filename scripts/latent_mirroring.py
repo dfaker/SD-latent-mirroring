@@ -68,9 +68,6 @@ class Script(scripts.Script):
             if self.y_pan != 0:
                  params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[2]*self.y_pan), dims=[2])
 
-            w, h = params.x.size()[2], params.x.size()[3]
-            tw, th = int(w*self.zoom_factor), int(h*self.zoom_factor)
-
 
     def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction):
         self.mirror_mode = mirror_mode
