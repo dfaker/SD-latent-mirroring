@@ -14,14 +14,16 @@ class Script(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        mirror_mode = gr.Radio(label='Latent Mirror mode', choices=['None', 'Alternate Steps', 'Blend Average'], value='None', type="index")
-        mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels', 'None'], value='Vertical Mirroring', type="index")
+        with gr.Group():
+            with gr.Accordion("Latent Mirroring", open=False):
+                mirror_mode = gr.Radio(label='Latent Mirror mode', choices=['None', 'Alternate Steps', 'Blend Average'], value='None', type="index")
+                mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels', 'None'], value='Vertical Mirroring', type="index")
 
-        with gr.Row():
-            x_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='X panning', value=0.0)
-            y_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='Y panning', value=0.0)
+                with gr.Row():
+                    x_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='X panning', value=0.0)
+                    y_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='Y panning', value=0.0)
 
-        mirroring_max_step_fraction = gr.Slider(minimum=0.0, maximum=1.0, step=0.01, label='Maximum steps fraction to mirror at', value=0.25)
+                mirroring_max_step_fraction = gr.Slider(minimum=0.0, maximum=1.0, step=0.01, label='Maximum steps fraction to mirror at', value=0.25)
 
         self.run_callback = False
         return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction]
