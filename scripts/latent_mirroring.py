@@ -72,16 +72,23 @@ class Script(scripts.Script):
 
 
     def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction):
-        self.mirror_mode = mirror_mode
-        self.mirror_style = mirror_style
-        self.mirroring_max_step_fraction = mirroring_max_step_fraction
-        self.x_pan = x_pan
-        self.y_pan = y_pan
+        if mirror_mode != 0:
+            self.mirror_mode = mirror_mode
+            self.mirror_style = mirror_style
+            self.mirroring_max_step_fraction = mirroring_max_step_fraction
+            self.x_pan = x_pan
+            self.y_pan = y_pan
 
-        if not hasattr(self, 'callbacks_added'):
-            on_cfg_denoiser(self.denoise_callback)
-            self.callbacks_added = True
-        self.run_callback = True
+            p.extra_generation_params["Mirror Mode"] = mirror_mode
+            p.extra_generation_params["Mirror Style"] = mirror_style
+            p.extra_generation_params["Mirror Max Step Fraction"] = mirroring_max_step_fraction
+            p.extra_generation_params["Mirror X Pan"] = x_pan
+            p.extra_generation_params["Mirror Y Pan"] = y_pan
+
+            if not hasattr(self, 'callbacks_added'):
+                on_cfg_denoiser(self.denoise_callback)
+                self.callbacks_added = True
+            self.run_callback = True
 
     def postprocess(self, *args):
         self.run_callback = False
