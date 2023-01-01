@@ -78,6 +78,15 @@ class Script(scripts.Script):
         self.x_pan = x_pan
         self.y_pan = y_pan
 
+        if mirror_mode != 0:
+            p.extra_generation_params["Mirror Mode"] = mirror_mode
+            p.extra_generation_params["Mirror Style"] = mirror_style
+            p.extra_generation_params["Mirroring Max Step Fraction"] = mirroring_max_step_fraction
+        if x_pan != 0:
+            p.extra_generation_params["X Pan"] = x_pan
+        if y_pan != 0:
+            p.extra_generation_params["Y Pan"] = y_pan
+
         if not hasattr(self, 'callbacks_added'):
             on_cfg_denoiser(self.denoise_callback)
             self.callbacks_added = True
