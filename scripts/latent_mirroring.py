@@ -17,7 +17,7 @@ class Script(scripts.Script):
         with gr.Group():
             with gr.Accordion("Latent Mirroring", open=False):
                 mirror_mode = gr.Radio(label='Latent Mirror mode', choices=['None', 'Alternate Steps', 'Blend Average'], value='None', type="index")
-                mirror_style = gr.Radio(label='Latent Mirror style', choices=['Vertical Mirroring', 'Horizontal Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels', 'None'], value='Vertical Mirroring', type="index")
+                mirror_style = gr.Radio(label='Latent Mirror style', choices=['Horizontal Mirroring', 'Vertical Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels', 'None'], value='Horizontal Mirroring', type="index")
 
                 with gr.Row():
                     x_pan = gr.Slider(minimum=-1.0, maximum=1.0, step=0.01, label='X panning', value=0.0)
