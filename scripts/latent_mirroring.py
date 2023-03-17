@@ -29,14 +29,14 @@ class Script(scripts.Script):
         return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction]
 
     def denoise_callback(self, params):
-        is_hires = self.next_denoise_is_hires
-        if not self.run_callback or is_hires:
-            return
-
         # indices start at -1
         # params.sampling_step = max(0, real_sampling_step)
         if params.sampling_step >= params.total_sampling_steps - 2:
-            self.next_denoise_is_hires = True
+            self.is_hires = not self.is_hires and self.enable_hr
+
+        is_hires = self.is_hires
+        if not self.run_callback or is_hires:
+            return
 
         if params.sampling_step >= params.total_sampling_steps * self.mirroring_max_step_fraction:
             return
@@ -101,7 +101,8 @@ class Script(scripts.Script):
             on_cfg_denoiser(self.denoise_callback)
             self.callbacks_added = True
         self.run_callback = True
-        self.next_denoise_is_hires = False
+        self.enable_hr = getattr(p, 'enable_hr', False)
+        self.is_hires = False
 
     def postprocess(self, *args):
         self.run_callback = False
