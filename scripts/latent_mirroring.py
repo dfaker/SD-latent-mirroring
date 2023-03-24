@@ -25,8 +25,11 @@ class Script(scripts.Script):
 
                 mirroring_max_step_fraction = gr.Slider(minimum=0.0, maximum=1.0, step=0.01, label='Maximum steps fraction to mirror at', value=0.25)
 
+                if not is_img2img:
+                    disable_hr = gr.Checkbox(label='Disable during hires pass', value=False)
+
         self.run_callback = False
-        return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction]
+        return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr]
 
     def denoise_callback(self, params):
         # indices start at -1
@@ -81,7 +84,7 @@ class Script(scripts.Script):
              params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[2]*self.y_pan), dims=[2])
 
 
-    def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction):
+    def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr=False):
         self.mirror_mode = mirror_mode
         self.mirror_style = mirror_style
         self.mirroring_max_step_fraction = mirroring_max_step_fraction
@@ -101,7 +104,7 @@ class Script(scripts.Script):
             on_cfg_denoiser(self.denoise_callback)
             self.callbacks_added = True
         self.run_callback = True
-        self.enable_hr = getattr(p, 'enable_hr', False)
+        self.enable_hr = getattr(p, 'enable_hr', False) and not disable_hr
         self.is_hires = False
 
     def postprocess(self, *args):
