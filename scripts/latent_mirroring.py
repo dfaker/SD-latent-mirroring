@@ -27,6 +27,8 @@ class Script(scripts.Script):
 
                 if not is_img2img:
                     disable_hr = gr.Checkbox(label='Disable during hires pass', value=False)
+                else:
+                    disable_hr = gr.State(False)
 
         self.run_callback = False
         return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr]
@@ -85,7 +87,7 @@ class Script(scripts.Script):
              params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[2]*self.y_pan), dims=[2])
 
 
-    def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr=False):
+    def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr):
         self.mirror_mode = mirror_mode
         self.mirror_style = mirror_style
         self.mirroring_max_step_fraction = mirroring_max_step_fraction
