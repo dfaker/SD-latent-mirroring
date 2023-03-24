@@ -32,12 +32,13 @@ class Script(scripts.Script):
         return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr]
 
     def denoise_callback(self, params):
+        is_hires = self.is_hires
+
         # indices start at -1
         # params.sampling_step = max(0, real_sampling_step)
         if params.sampling_step >= params.total_sampling_steps - 2:
-            self.is_hires = not self.is_hires and self.enable_hr
+            self.is_hires = not is_hires and self.enable_hr
 
-        is_hires = self.is_hires
         if not self.run_callback or is_hires:
             return
 
