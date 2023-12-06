@@ -16,6 +16,7 @@ class Script(scripts.Script):
     def ui(self, is_img2img):
         with gr.Group():
             with gr.Accordion("Latent Mirroring", open=False):
+                enabled = gr.Checkbox(label='Enabled', value=False)
                 mirror_mode = gr.Radio(label='Latent Mirror mode', choices=['None', 'Alternate Steps', 'Blend Average'], value='None', type="index")
                 mirror_style = gr.Radio(label='Latent Mirror style', choices=['Horizontal Mirroring', 'Vertical Mirroring', 'Horizontal+Vertical Mirroring', '90 Degree Rotation', '180 Degree Rotation', 'Roll Channels', 'None'], value='Horizontal Mirroring', type="index")
 
@@ -31,55 +32,53 @@ class Script(scripts.Script):
                     disable_hr = gr.State(False)
 
         self.run_callback = False
-        return [mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr]
+        return [enabled, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr]
+
+    mirror_handlers = (
+        (   lambda x: torch.flip(x, [3]),
+            lambda x: torch.flip(x, [2]),
+            lambda x: torch.flip(x, [3, 2]),
+            lambda x: torch.rot90(x, dims=[2, 3]),
+            lambda x: torch.rot90(torch.rot90(x, dims=[2, 3]), dims=[2, 3]),
+            lambda x: torch.roll(x, shifts=1, dims=[1]),
+            lambda x: x,
+        ),
+        (   lambda x: (torch.flip(x, [3]) + x)/2,
+            lambda x: (torch.flip(x, [2]) + x)/2,
+            lambda x: (torch.flip(x, [2, 3]) + x)/2,
+            lambda x: (torch.rot90(x, dims=[2, 3]) + x)/2,
+            lambda x: (torch.rot90(torch.rot90(x, dims=[2, 3]), dims=[2, 3]) + x)/2,
+            lambda x: (torch.roll(x, shifts=1, dims=[1]) + x)/2,
+            lambda x: x,
+        ),
+    )
 
     def denoise_callback(self, params):
-        is_hires = self.is_hires
+        if not self.enabled:
+            return
 
         # indices start at -1
         # params.sampling_step = max(0, real_sampling_step)
         if params.sampling_step >= params.total_sampling_steps - 2:
-            self.is_hires = not is_hires and self.enable_hr
+            self.is_hires = True
 
-        if not self.run_callback or is_hires:
+        if self.is_hires and not self.enable_hr:
+            return
+
+        if not self.run_callback:
             return
 
         if params.sampling_step >= params.total_sampling_steps * self.mirroring_max_step_fraction:
             return
 
-        try:
-            if self.mirror_mode == 1:
-                if self.mirror_style == 0:
-                    params.x[:, :, :, :] = torch.flip(params.x, [3])
-                elif self.mirror_style == 1:
-                    params.x[:, :, :, :] = torch.flip(params.x, [2])
-                elif self.mirror_style == 2:
-                    params.x[:, :, :, :] = torch.flip(params.x, [3, 2])
-                elif self.mirror_style == 3:
-                    params.x[:, :, :, :] = torch.rot90(params.x, dims=[2, 3])
-                elif self.mirror_style == 4:
-                    params.x[:, :, :, :] = torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3])
-                elif self.mirror_style == 5:
-                    params.x[:, :, :, :] = torch.roll(params.x, shifts=1, dims=[1])
-
-            elif self.mirror_mode == 2:
-                if self.mirror_style == 0:
-                    params.x[:, :, :, :] = (torch.flip(params.x, [3]) + params.x)/2
-                elif self.mirror_style == 1:
-                    params.x[:, :, :, :] = (torch.flip(params.x, [2]) + params.x)/2
-                elif self.mirror_style == 2:
-                    params.x[:, :, :, :] = (torch.flip(params.x, [2, 3]) + params.x)/2
-                elif self.mirror_style == 3:
-                    params.x[:, :, :, :] = (torch.rot90(params.x, dims=[2, 3]) + params.x)/2
-                elif self.mirror_style == 4:
-                    params.x[:, :, :, :] = (torch.rot90(torch.rot90(params.x, dims=[2, 3]), dims=[2, 3]) + params.x)/2
-                elif self.mirror_style == 5:
-                    params.x[:, :, :, :] = (torch.roll(params.x, shifts=1, dims=[1]) + params.x)/2
-        except RuntimeError as e:
-            if self.mirror_style in (3, 4):
-                raise RuntimeError('90 Degree Rotation requires a square image.') from e
-            else:
-                raise RuntimeError('Error transforming image for latent mirroring.') from e
+        if self.mirror_mode > 0:
+            try:
+                params.x[:, :, :, :] = self.mirror_handlers[self.mirror_mode - 1][self.mirror_style](params.x)
+            except RuntimeError as e:
+                if self.mirror_style in (3, 4):
+                    raise RuntimeError('90 Degree Rotation requires a square image.') from e
+                else:
+                    raise RuntimeError('Error transforming image for latent mirroring.') from e
 
         if self.x_pan != 0:
             params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[3]*self.x_pan), dims=[3])
@@ -87,7 +86,8 @@ class Script(scripts.Script):
              params.x[:, :, :, :] = torch.roll(params.x, shifts=int(params.x.size()[2]*self.y_pan), dims=[2])
 
 
-    def process(self, p, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr):
+    def process(self, p, enabled, mirror_mode, mirror_style, x_pan, y_pan, mirroring_max_step_fraction, disable_hr):
+        self.enabled = enabled
         self.mirror_mode = mirror_mode
         self.mirror_style = mirror_style
         self.mirroring_max_step_fraction = mirroring_max_step_fraction
